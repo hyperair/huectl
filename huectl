@@ -1,0 +1,99 @@
+#!/usr/bin/env python3
+
+import click
+import requests
+import subprocess
+from typing import Any, Dict, List, Optional, Union
+
+
+# types
+LightID = int
+LightName = str
+LightIDOrName = Union[LightID, LightName]
+
+token: str = subprocess.check_output(
+    ["extract-pw", "philips-hue.local", "thinkpwn"]
+).strip().decode("utf-8")
+base_uri = f"http://philips-hue.local/api/{token}"
+session = requests.session()
+
+def ctrl_lights(light_ids: List[int], state_params: Dict[str, Any]) -> None:
+    """
+    PUT state_params to each light in the list of light_ids
+    """
+    for light_id in light_ids:
+        response = session.put(
+            f"{base_uri}/lights/{light_id}/state",
+            json=state_params
+        )
+
+        if response.status_code != 200:
+            print(f"Failed to set light {light_id} state: {response.text}")
+
+
+def get_light_ids(lights: List[LightIDOrName]) -> List[LightID]:
+    """
+    Translate light IDs/names to light IDs
+    """
+    # all IDs, no need to translate
+    if all(isinstance(light, LightID) for light in lights):
+        return lights
+
+    response = session.get(f"{base_uri}/lights")
+    response.raise_for_status()
+    all_lights = response.json()
+
+    light_lookup: Dict[LightName, LightID] = {
+        light_definition["name"]: light_id
+        for light_id, light_definition in all_lights.items()
+    }
+
+    return [light_lookup[light] for light in lights]
+
+
+def get_state_params(
+        on_off: Optional[bool],
+        bri: Optional[int],
+        ct: Optional[int]
+) -> Dict[str, Any]:
+    """
+    Translate on_off, bri, and ct into a state param dictionary that can be
+    directly PUTed to the Hue Bridge
+    """
+    retval: Dict[str, Any] = {}
+
+    if on_off is not None:
+        retval["on"] = on_off
+
+    if bri is not None:
+        retval["bri"] = bri
+
+    if ct is not None:
+        retval["ct"] = ct
+
+    return retval
+
+
+@click.command()
+@click.option("--on/--off", default=None, help="Turn on or off the light")
+@click.option("--bri", default=None, type=click.IntRange(0, 254, clamp=True),
+              help="Brightness")
+@click.option("--ct", default=None, type=click.IntRange(153, 500, clamp=True),
+              help="Colour temperature")
+@click.argument("lights", required=True, nargs=-1)
+@click.pass_context
+def main(
+        ctx,
+        on: Optional[bool],
+        bri: Optional[int],
+        ct: Optional[int],
+        lights: List[LightIDOrName]
+):
+    ctrl_lights(
+        get_light_ids(lights),
+        get_state_params(on_off=on, bri=bri, ct=ct)
+    )
+
+
+if __name__ == "__main__":
+    main()
