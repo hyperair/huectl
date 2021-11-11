@@ -11,21 +11,21 @@ LightID = int
 LightName = str
 LightIDOrName = Union[LightID, LightName]
 
-token: str = subprocess.check_output(
-    ["extract-pw", "philips-hue.local", "thinkpwn"]
-).strip().decode("utf-8")
+token: str = (
+    subprocess.check_output(["extract-pw", "philips-hue.local", "thinkpwn"])
+    .strip()
+    .decode("utf-8")
+)
 base_uri = f"http://philips-hue.local/api/{token}"
 session = requests.session()
+
 
 def ctrl_lights(light_ids: List[int], state_params: Dict[str, Any]) -> None:
     """
     PUT state_params to each light in the list of light_ids
     """
     for light_id in light_ids:
-        response = session.put(
-            f"{base_uri}/lights/{light_id}/state",
-            json=state_params
-        )
+        response = session.put(f"{base_uri}/lights/{light_id}/state", json=state_params)
 
         if response.status_code != 200:
             print(f"Failed to set light {light_id} state: {response.text}")
@@ -52,9 +52,7 @@ def get_light_ids(lights: List[LightIDOrName]) -> List[LightID]:
 
 
 def get_state_params(
-        on_off: Optional[bool],
-        bri: Optional[int],
-        ct: Optional[int]
+    on_off: Optional[bool], bri: Optional[int], ct: Optional[int]
 ) -> Dict[str, Any]:
     """
     Translate on_off, bri, and ct into a state param dictionary that can be
@@ -76,23 +74,25 @@ def get_state_params(
 
 @click.command()
 @click.option("--on/--off", default=None, help="Turn on or off the light")
-@click.option("--bri", default=None, type=click.IntRange(0, 254, clamp=True),
-              help="Brightness")
-@click.option("--ct", default=None, type=click.IntRange(153, 500, clamp=True),
-              help="Colour temperature")
+@click.option(
+    "--bri", default=None, type=click.IntRange(0, 254, clamp=True), help="Brightness"
+)
+@click.option(
+    "--ct",
+    default=None,
+    type=click.IntRange(153, 500, clamp=True),
+    help="Colour temperature",
+)
 @click.argument("lights", required=True, nargs=-1)
 @click.pass_context
 def main(
-        ctx,
-        on: Optional[bool],
-        bri: Optional[int],
-        ct: Optional[int],
-        lights: List[LightIDOrName]
+    ctx,
+    on: Optional[bool],
+    bri: Optional[int],
+    ct: Optional[int],
+    lights: List[LightIDOrName],
 ):
-    ctrl_lights(
-        get_light_ids(lights),
-        get_state_params(on_off=on, bri=bri, ct=ct)
-    )
+    ctrl_lights(get_light_ids(lights), get_state_params(on_off=on, bri=bri, ct=ct))
 
 
 if __name__ == "__main__":
