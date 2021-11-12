@@ -4,6 +4,7 @@ import click
 import requests
 import subprocess
 from typing import Any, Dict, List, Optional, Union
+import sys
 
 
 # types
@@ -48,7 +49,18 @@ def get_light_ids(lights: List[LightIDOrName]) -> List[LightID]:
         for light_id, light_definition in all_lights.items()
     }
 
-    return [light_lookup[light] for light in lights]
+    try:
+        return [light_lookup[light] for light in lights]
+    except KeyError as e:
+        light = e.args[0]
+        light_names = "\n".join(
+            f" - {light_name}" for light_name in sorted(light_lookup)
+        )
+        print(
+            f"Could not find light {light}. Available lights are:\n"
+            f"{light_names}"
+        )
+        sys.exit(1)
 
 
 def get_state_params(
