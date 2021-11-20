@@ -95,20 +95,23 @@ def get_state_params(
 def cli():
     pass
 
-@click.command()
+@click.command(help="Display a list of all lights")
 def show():
     print_lights(get_all_light_ids())
 
-@click.command()
+@click.command(no_args_is_help=True, help="Control lights")
 @click.option("--on/--off", default=None, help="Turn on or off the light")
 @click.option(
-    "--bri", default=None, type=click.IntRange(0, 254, clamp=True), help="Brightness"
+    "--bri",
+    default=None,
+    type=click.IntRange(0, 254, clamp=True),
+    help="Brightness"
 )
 @click.option(
     "--ct",
     default=None,
     type=click.IntRange(153, 500, clamp=True),
-    help="Colour temperature",
+    help="Colour temperature, larger number = warmer",
 )
 @click.argument("lights", required=True, nargs=-1)
 
@@ -124,6 +127,13 @@ def control(
 
 cli.add_command(show)
 cli.add_command(control)
+
+# Light IDs
+# 1: Study Dwerp L
+# 2: Study Dwerp R
+# 3: Dining E27
+# 4: Study Bobcat R
+# 5: Study Bobcat L
 
 if __name__ == "__main__":
     cli()
