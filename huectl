@@ -12,11 +12,7 @@ LightID = int
 LightName = str
 LightIDOrName = Union[LightID, LightName]
 
-token: str = (
-    subprocess.check_output(["extract-pw", "philips-hue.local", "thinkpwn"])
-    .strip()
-    .decode("utf-8")
-)
+token = "0PBu5YcC5424RYtEpIO1mrN6xAWrfH5twPzpbVG0"
 base_uri = f"http://philips-hue.local/api/{token}"
 session = requests.session()
 
@@ -32,14 +28,15 @@ def ctrl_lights(light_ids: List[int], state_params: Dict[str, Any]) -> None:
             print(f"Failed to set light {light_id} state: {response.text}")
 
 
-def get_light_ids(lights: List[LightIDOrName]) -> List[LightID]:
-    """
-    Translate light IDs/names to light IDs
-    """
-    # all IDs, no need to translate
-    if all(isinstance(light, LightID) for light in lights):
-        return lights
+def print_lights(light_lookup: List[LightID]) -> None:
+    light_names = "\n".join(
+        f" - {light_name}" for light_name in sorted(light_lookup)
+    )
 
+    print(f"{light_names}")
+
+
+def get_all_light_ids() -> Dict[LightName, LightID]:
     response = session.get(f"{base_uri}/lights")
     response.raise_for_status()
     all_lights = response.json()
@@ -49,17 +46,27 @@ def get_light_ids(lights: List[LightIDOrName]) -> List[LightID]:
         for light_id, light_definition in all_lights.items()
     }
 
+    return light_lookup
+
+
+def get_light_ids(lights: List[LightIDOrName]) -> List[LightID]:
+    """
+    Translate light IDs/names to light IDs
+    """
+    # all IDs, no need to translate
+    if all(isinstance(light, LightID) for light in lights):
+        return lights
+
+    light_lookup = get_all_light_ids()
+
     try:
         return [light_lookup[light] for light in lights]
     except KeyError as e:
         light = e.args[0]
-        light_names = "\n".join(
-            f" - {light_name}" for light_name in sorted(light_lookup)
-        )
         print(
-            f"Could not find light {light}. Available lights are:\n"
-            f"{light_names}"
+            f"Could not find light {light}. Available lights are:"
         )
+        print_lights(light_lookup)
         sys.exit(1)
 
 
@@ -84,6 +91,14 @@ def get_state_params(
     return retval
 
 
+@click.group()
+def cli():
+    pass
+
+@click.command()
+def show():
+    print_lights(get_all_light_ids())
+
 @click.command()
 @click.option("--on/--off", default=None, help="Turn on or off the light")
 @click.option(
@@ -96,8 +111,9 @@ def get_state_params(
     help="Colour temperature",
 )
 @click.argument("lights", required=True, nargs=-1)
+
 @click.pass_context
-def main(
+def control(
     ctx,
     on: Optional[bool],
     bri: Optional[int],
@@ -106,6 +122,8 @@ def main(
 ):
     ctrl_lights(get_light_ids(lights), get_state_params(on_off=on, bri=bri, ct=ct))
 
+cli.add_command(show)
+cli.add_command(control)
 
 if __name__ == "__main__":
-    main()
+    cli()
