@@ -128,12 +128,5 @@ def control(
 cli.add_command(show)
 cli.add_command(control)
 
-# Light IDs
-# 1: Study Dwerp L
-# 2: Study Dwerp R
-# 3: Dining E27
-# 4: Study Bobcat R
-# 5: Study Bobcat L
-
 if __name__ == "__main__":
     cli()
