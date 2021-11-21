@@ -109,7 +109,7 @@ def get_state_params(
     return retval
 
 
-@click.group()
+@click.group(no_args_is_help=True)
 def cli():
     pass
 
