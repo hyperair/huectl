@@ -113,10 +113,14 @@ def get_state_params(
 def cli():
     pass
 
+
+@cli.add_command
 @click.command(help="Display a list of all lights")
 def show():
     print_lights(get_all_light_ids())
 
+
+@cli.add_command
 @click.command(no_args_is_help=True, help="Control lights")
 @click.option("--on/--off", default=None, help="Turn on or off the light")
 @click.option(
@@ -139,8 +143,6 @@ def control(
 ):
     ctrl_lights(get_light_ids(lights), get_state_params(on_off=on, bri=bri, ct=ct))
 
-cli.add_command(show)
-cli.add_command(control)
 
 if __name__ == "__main__":
     cli()
