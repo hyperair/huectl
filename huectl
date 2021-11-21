@@ -28,9 +28,9 @@ def ctrl_lights(light_ids: List[int], state_params: Dict[str, Any]) -> None:
             print(f"Failed to set light {light_id} state: {response.text}")
 
 
-def print_lights(light_lookup: List[LightID]) -> None:
+def print_lights(light_lookup: Dict[LightName, LightID]) -> None:
     light_names = "\n".join(
-        f" - {light_name}" for light_name in sorted(light_lookup)
+        f" - {light_lookup[light_name]}: {light_name}" for light_name in sorted(light_lookup)
     )
 
     print(f"{light_names}")
