@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import click
 import requests
 import subprocess
@@ -12,7 +13,7 @@ LightID = int
 LightName = str
 LightIDOrName = Union[LightID, LightName]
 
-token = "0PBu5YcC5424RYtEpIO1mrN6xAWrfH5twPzpbVG0"
+token = os.environ.get('HUE_TOKEN')
 base_uri = f"http://philips-hue.local/api/{token}"
 session = requests.session()
 
