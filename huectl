@@ -37,8 +37,11 @@ def get_light_ids(lights: List[LightIDOrName]) -> List[LightID]:
     Translate light IDs/names to light IDs
     """
     # all IDs, no need to translate
-    if all(isinstance(light, LightID) for light in lights):
-        return lights
+    try:
+        return list(map(LightID, lights))
+    except ValueError:
+        # ignore error, it means we need to translate the light ids to names
+        pass
 
     response = session.get(f"{base_uri}/lights")
     response.raise_for_status()
@@ -50,7 +53,13 @@ def get_light_ids(lights: List[LightIDOrName]) -> List[LightID]:
     }
 
     try:
-        return [light_lookup[light] for light in lights]
+        def translate_light_id(light: LightIDOrName) -> LightID:
+            try:
+                return LightID(light)
+            except ValueError:
+                return light_lookup[light]
+
+        return [translate_light_id(light) for light in lights]
     except KeyError as e:
         light = e.args[0]
         light_names = "\n".join(
