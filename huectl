@@ -13,7 +13,7 @@ LightID = int
 LightName = str
 LightIDOrName = Union[LightID, LightName]
 
-token = os.environ.get('HUE_TOKEN')
+token = os.environ.get("HUE_TOKEN")
 base_uri = f"http://philips-hue.local/api/{token}"
 session = requests.session()
 
@@ -31,7 +31,8 @@ def ctrl_lights(light_ids: List[int], state_params: Dict[str, Any]) -> None:
 
 def print_lights(light_lookup: Dict[LightName, LightID]) -> None:
     light_names = "\n".join(
-        f" - {light_lookup[light_name]}: {light_name}" for light_name in sorted(light_lookup)
+        f" - {light_lookup[light_name]}: {light_name}"
+        for light_name in sorted(light_lookup)
     )
 
     print(f"{light_names}")
@@ -72,19 +73,17 @@ def get_light_ids(lights: List[LightIDOrName]) -> List[LightID]:
 
     light_lookup = get_all_light_ids()
 
-    try:
-        def translate_light_id(light: LightIDOrName) -> LightID:
-            try:
-                return LightID(light)
-            except ValueError:
-                return light_lookup[light]
+    def translate_light_id(light: LightIDOrName) -> LightID:
+        try:
+            return LightID(light)
+        except ValueError:
+            return light_lookup[light]
 
+    try:
         return [translate_light_id(light) for light in lights]
     except KeyError as e:
         light = e.args[0]
-        print(
-            f"Could not find light {light}. Available lights are:"
-        )
+        print(f"Could not find light {light}. Available lights are:")
         print_lights(light_lookup)
         sys.exit(1)
 
@@ -121,10 +120,7 @@ def show():
 @click.command(no_args_is_help=True, help="Control lights")
 @click.option("--on/--off", default=None, help="Turn on or off the light")
 @click.option(
-    "--bri",
-    default=None,
-    type=click.IntRange(0, 254, clamp=True),
-    help="Brightness"
+    "--bri", default=None, type=click.IntRange(0, 254, clamp=True), help="Brightness"
 )
 @click.option(
     "--ct",
@@ -133,7 +129,6 @@ def show():
     help="Colour temperature, larger number = warmer",
 )
 @click.argument("lights", required=True, nargs=-1)
-
 @click.pass_context
 def control(
     ctx,
