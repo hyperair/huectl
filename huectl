@@ -14,7 +14,8 @@ LightName = str
 LightIDOrName = Union[LightID, LightName]
 
 token = os.environ.get("HUE_TOKEN")
-base_uri = f"http://philips-hue.local/api/{token}"
+# change to your local philips hue ip address
+base_uri = f"http://philips-hue.lan/api/{token}"
 session = requests.session()
 
 
